@@ -1,0 +1,20 @@
+{
+    "tangbao-db-crud": {
+        "label": {
+            "dbConfig": "数据库配置",
+            "operation": "操作类型",
+            "tableName": "表名",
+            "idColumn": "ID 字段名",
+            "resultMap": "结果映射",
+            "paramMap": "参数映射"
+        },
+        "resultMap": {
+            "none": "无",
+            "camelCase": "下划线转驼峰"
+        },
+        "paramMap": {
+            "none": "无",
+            "snakeCase": "驼峰转下划线"
+        }
+    }
+}

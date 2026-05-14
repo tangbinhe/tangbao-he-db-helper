@@ -1,0 +1,254 @@
+<script type="text/javascript">
+    RED.nodes.registerType('tangbao-db-crud', {
+        category: 'database',
+        color: '#C0DEED',
+        defaults: {
+            name: { value: '' },
+            dbConfig: { value: '', type: 'tangbao-db-config', required: true },
+            operation: { value: 'selectList', required: true },
+            tableName: { value: '', required: false },
+            idColumn: { value: 'id', required: false },
+            resultMap: { value: 'camelCase', required: true },
+            paramMap: { value: 'snakeCase', required: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'logo.png',
+        label: function() {
+            return this.name || (this.operation + ' ' + this.tableName);
+        },
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        },
+        oneditprepare: function() {
+            var node = this;
+            var nameManuallyEdited = false;
+
+            function updateUI() {
+                var op = $('#node-input-operation').val();
+                var needId = ['selectById', 'selectByIds', 'updateById', 'updateSelectiveById', 'deleteById', 'deleteByIds'].indexOf(op) >= 0;
+                $('#idColumn-row').toggle(needId);
+            }
+
+            $('#node-input-operation').on('change', updateUI);
+            setTimeout(updateUI, 0);
+
+            // 名称自动补全：用户未手动编辑时，根据 operation + tableName 自动生成
+            function autoFillName() {
+                if (nameManuallyEdited) return;
+                var op = $('#node-input-operation').val();
+                var table = $('#node-input-tableName-select').is(':visible')
+                    ? $('#node-input-tableName-select').val()
+                    : $('#node-input-tableName-input').val();
+                if (op && table) {
+                    $('#node-input-name').val(op + ' ' + table);
+                } else if (op) {
+                    $('#node-input-name').val(op);
+                }
+            }
+
+            $('#node-input-operation').on('change', autoFillName);
+            $('#node-input-name').on('input', function() {
+                nameManuallyEdited = !!$(this).val();
+            });
+
+            // 表名：下拉框 / 输入框 切换
+            var isCustomMode = node.tableName && true;
+
+            function syncTableName() {
+                var val = $('#node-input-tableName-select').is(':visible')
+                    ? $('#node-input-tableName-select').val()
+                    : $('#node-input-tableName-input').val();
+                node.tableName = val;
+                autoFillName();
+            }
+
+            $('#node-input-tableName-select').on('change', syncTableName);
+            $('#node-input-tableName-input').on('input', syncTableName);
+
+            function switchToCustom() {
+                $('#node-input-tableName-select').hide();
+                $('#node-input-tableName-input').show().val(node.tableName || '').focus();
+                $('#node-input-tableName-custom i').removeClass('fa-pencil').addClass('fa-list');
+                $('#node-input-tableName-custom').attr('title', '返回下拉选择');
+                isCustomMode = true;
+            }
+
+            function switchToSelect() {
+                $('#node-input-tableName-input').hide();
+                $('#node-input-tableName-select').show();
+                $('#node-input-tableName-custom i').removeClass('fa-list').addClass('fa-pencil');
+                $('#node-input-tableName-custom').attr('title', '自定义输入');
+                isCustomMode = false;
+                loadTables();
+            }
+
+            $('#node-input-tableName-custom').on('click', function() {
+                if (isCustomMode) {
+                    switchToSelect();
+                } else {
+                    switchToCustom();
+                }
+            });
+
+            function escapeHtml(str) {
+                return String(str).replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            // 动态加载表名
+            function loadTables() {
+                var dbConfigId = $('#node-input-dbConfig').val();
+                var $select = $('#node-input-tableName-select');
+                var currentVal = node.tableName || '';
+
+                if (!dbConfigId || dbConfigId === '_ADD_') {
+                    $select.html('<option value="">-- 请先选择数据库配置 --</option>');
+                    return;
+                }
+
+                $select.html('<option value="">-- 加载中 --</option>');
+                $.getJSON('/tangbao-db-config/' + dbConfigId + '/tables', function(tables) {
+                    var html = '<option value="">-- 请选择表 --</option>';
+                    var hasCurrent = false;
+                    tables.forEach(function(t) {
+                        var selected = (t === currentVal) ? ' selected' : '';
+                        if (t === currentVal) hasCurrent = true;
+                        html += '<option value="' + escapeHtml(t) + '"' + selected + '>' + escapeHtml(t) + '</option>';
+                    });
+                    if (currentVal && !hasCurrent) {
+                        html += '<option value="' + escapeHtml(currentVal) + '" selected>' + escapeHtml(currentVal) + ' (自定义)</option>';
+                        hasCurrent = true;
+                    }
+                    $select.html(html);
+                    syncTableName();
+
+                    // 如果预存值不在列表中，自动切换到自定义输入
+                    if (currentVal && !hasCurrent && !isCustomMode) {
+                        switchToCustom();
+                    }
+                }).fail(function() {
+                    $select.html('<option value="">-- 无法加载表名 --</option>');
+                    if (currentVal && !isCustomMode) {
+                        switchToCustom();
+                    }
+                });
+            }
+
+            $('#node-input-dbConfig').on('change', loadTables);
+            $('#node-input-tableName-refresh').on('click', loadTables);
+
+            // 初始化
+            setTimeout(loadTables, 0);
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="tangbao-db-crud">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-dbConfig"><i class="fa fa-database"></i> 数据库配置</label>
+        <input type="text" id="node-input-dbConfig">
+    </div>
+    <div class="form-row">
+        <label for="node-input-operation"><i class="fa fa-cogs"></i> 操作类型</label>
+        <select id="node-input-operation" style="width:70%">
+            <optgroup label="查询">
+                <option value="selectById">selectById - 根据ID查询</option>
+                <option value="selectOne">selectOne - 根据条件查询单条</option>
+                <option value="selectList">selectList - 根据条件查询列表</option>
+                <option value="selectCount">selectCount - 查询总数</option>
+                <option value="selectByIds">selectByIds - 根据ID列表查询</option>
+                <option value="selectPage">selectPage - 分页查询</option>
+            </optgroup>
+            <optgroup label="插入">
+                <option value="insert">insert - 插入（全字段）</option>
+                <option value="insertSelective">insertSelective - 插入（非空字段）</option>
+                <option value="insertBatch">insertBatch - 批量插入</option>
+            </optgroup>
+            <optgroup label="更新">
+                <option value="updateById">updateById - 根据ID更新（全字段）</option>
+                <option value="updateSelectiveById">updateSelectiveById - 根据ID更新（非空字段）</option>
+            </optgroup>
+            <optgroup label="删除">
+                <option value="deleteById">deleteById - 根据ID删除</option>
+                <option value="deleteByIds">deleteByIds - 根据ID列表删除</option>
+            </optgroup>
+            <optgroup label="批量">
+                <option value="deleteAndInsertBatch">deleteAndInsertBatch - 清空并批量导入</option>
+            </optgroup>
+        </select>
+    </div>
+    <div class="form-row">
+        <label><i class="fa fa-table"></i> 表名</label>
+        <div style="display:inline-block; width:70%;">
+            <select id="node-input-tableName-select" style="width: calc(100% - 80px);">
+                <option value="" disabled>-- 加载中 --</option>
+            </select>
+            <input type="text" id="node-input-tableName-input" style="width: calc(100% - 80px); display:none;" placeholder="输入表名">
+            <button type="button" id="node-input-tableName-refresh" class="red-ui-button" style="width:32px; margin-left:4px;" title="刷新表名"><i class="fa fa-refresh"></i></button>
+            <button type="button" id="node-input-tableName-custom" class="red-ui-button" style="width:32px; margin-left:2px;" title="自定义输入"><i class="fa fa-pencil"></i></button>
+        </div>
+    </div>
+    <div class="form-row" id="idColumn-row">
+        <label for="node-input-idColumn"><i class="fa fa-key"></i> ID字段</label>
+        <input type="text" id="node-input-idColumn" placeholder="id">
+    </div>
+    <div class="form-row">
+        <label for="node-input-resultMap"><i class="fa fa-exchange"></i> 结果映射</label>
+        <select id="node-input-resultMap" style="width: 70%">
+            <option value="none">无</option>
+            <option value="camelCase">驼峰命名</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-paramMap"><i class="fa fa-exchange"></i> 参数映射</label>
+        <select id="node-input-paramMap" style="width: 70%">
+            <option value="none">无</option>
+            <option value="snakeCase">下划线命名</option>
+        </select>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="tangbao-db-crud">
+    <p>预生成 CRUD 操作，类似 MyBatis 的 BaseMapper。</p>
+    
+    <h3>操作类型</h3>
+    <table class="node-info">
+        <tr><th>操作</th><th>说明</th><th>参数</th></tr>
+        <tr><td>selectById</td><td>根据ID查询</td><td>msg.params/payload = {id: 1}</td></tr>
+        <tr><td>selectOne</td><td>条件查询单条</td><td>msg.params/payload = {name: "Alice"}</td></tr>
+        <tr><td>selectList</td><td>条件查询列表</td><td>msg.params/payload = {status: 1}</td></tr>
+        <tr><td>selectCount</td><td>查询总数</td><td>msg.params/payload = {status: 1}</td></tr>
+        <tr><td>selectByIds</td><td>ID列表查询</td><td>msg.params/payload = [1, 2, 3]</td></tr>
+        <tr><td>selectPage</td><td>分页查询</td><td>msg.params/payload = {status: 1, pageNum: 1, pageSize: 10}</td></tr>
+        <tr><td>insert</td><td>插入全字段</td><td>msg.params/payload = {name: "Alice", age: 20}</td></tr>
+        <tr><td>insertSelective</td><td>插入非空字段</td><td>msg.params/payload = {name: "Alice"}</td></tr>
+        <tr><td>insertBatch</td><td>批量插入</td><td>msg.params/payload = [{name: "A"}, {name: "B"}]</td></tr>
+        <tr><td>updateById</td><td>根据ID更新全字段</td><td>msg.params/payload = {id: 1, name: "Bob", age: 21}</td></tr>
+        <tr><td>updateSelectiveById</td><td>根据ID更新非空字段</td><td>msg.params/payload = {id: 1, name: "Bob"}</td></tr>
+        <tr><td>deleteById</td><td>根据ID删除</td><td>msg.params/payload = {id: 1}</td></tr>
+        <tr><td>deleteByIds</td><td>根据ID列表删除</td><td>msg.params/payload = [1, 2, 3]</td></tr>
+        <tr><td>deleteAndInsertBatch</td><td>清空表并批量导入</td><td>msg.params/payload = [{name: "A"}, {name: "B"}]</td></tr>
+    </table>
+    
+    <h3>动态传入</h3>
+    <p>表名、参数均可通过 <code>msg</code> 动态传入，实现一个节点操作多张表：</p>
+    <ul>
+        <li><code>msg.tableName</code> - <b>表名</b>（优先级高于节点配置，不写死）</li>
+        <li><code>msg.params</code> 或 <code>msg.payload</code> - <b>查询/插入/更新参数</b>（每次可传不同条件，优先读取 <code>msg.params</code>，不存在时自动回退到 <code>msg.payload</code>）</li>
+        <li><code>msg.operation</code> - 覆盖操作类型</li>
+        <li><code>msg.idColumn</code> - 覆盖ID字段名（默认 id）</li>
+    </ul>
+    <p>示例：同一个 db-crud 节点，先查 user 表，再查 order 表</p>
+    <pre>msg.tableName = "user";
+msg.params = { status: 1 };
+// 下一次流入
+msg.tableName = "order";
+msg.params = { status: 2 };</pre>
+</script>

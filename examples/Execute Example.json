@@ -1,0 +1,65 @@
+[
+    {
+        "id": "e1",
+        "type": "inject",
+        "z": "flow2",
+        "name": "Test Execute",
+        "props": [
+            {"p": "sql", "v": "UPDATE user SET name = #{name} WHERE id = #{id}", "vt": "str"},
+            {"p": "params", "v": "{\"id\":1,\"name\":\"Alice\"}", "vt": "json"}
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 100,
+        "wires": [["exec1"]]
+    },
+    {
+        "id": "exec1",
+        "type": "tangbao-db-execute",
+        "z": "flow2",
+        "name": "",
+        "dbConfig": "db2",
+        "mapper": "mapper1",
+        "sql": "",
+        "x": 350,
+        "y": 100,
+        "wires": [["debug2"]]
+    },
+    {
+        "id": "debug2",
+        "type": "debug",
+        "z": "flow2",
+        "name": "Result",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 550,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "db2",
+        "type": "tangbao-db-config",
+        "dbType": "mysql",
+        "host": "localhost",
+        "port": "3306",
+        "user": "root",
+        "password": "",
+        "database": "test"
+    },
+    {
+        "id": "mapper1",
+        "type": "tangbao-sql-mapper",
+        "name": "Update User",
+        "sqlTemplate": "UPDATE user SET name = #{name} WHERE id = #{id}"
+    }
+]
