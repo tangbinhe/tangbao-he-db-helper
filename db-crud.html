@@ -180,6 +180,7 @@
                 <option value="deleteByIds">deleteByIds - 根据ID列表删除</option>
             </optgroup>
             <optgroup label="批量">
+                <option value="upsertBatch">upsertBatch - 批量插入或更新</option>
                 <option value="deleteAndInsertBatch">deleteAndInsertBatch - 清空并批量导入</option>
             </optgroup>
         </select>
@@ -206,11 +207,11 @@
             <option value="camelCase">驼峰命名</option>
         </select>
     </div>
-    <div class="form-row">
+        <div class="form-row">
         <label for="node-input-paramMap"><i class="fa fa-exchange"></i> 参数映射</label>
         <select id="node-input-paramMap" style="width: 70%">
             <option value="none">无</option>
-            <option value="snakeCase">下划线命名</option>
+            <option value="snakeCase">驼峰转下划线</option>
         </select>
     </div>
 </script>
@@ -234,6 +235,7 @@
         <tr><td>updateSelectiveById</td><td>根据ID更新非空字段</td><td>msg.params/payload = {id: 1, name: "Bob"}</td></tr>
         <tr><td>deleteById</td><td>根据ID删除</td><td>msg.params/payload = {id: 1}</td></tr>
         <tr><td>deleteByIds</td><td>根据ID列表删除</td><td>msg.params/payload = [1, 2, 3]</td></tr>
+        <tr><td>upsertBatch</td><td>批量插入或更新（ON DUPLICATE KEY UPDATE）</td><td>msg.params/payload = [{id: 1, name: "A"}, {id: 2, name: "B"}]</td></tr>
         <tr><td>deleteAndInsertBatch</td><td>清空表并批量导入</td><td>msg.params/payload = [{name: "A"}, {name: "B"}]</td></tr>
     </table>
     

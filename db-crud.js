@@ -352,6 +352,40 @@ module.exports = function(RED) {
                         isQuery = false;
                         break;
 
+                    case 'upsertBatch':
+                        var upsertData = msg.params || msg.payload;
+                        if (!Array.isArray(upsertData) || upsertData.length === 0) {
+                            throw new Error('upsertBatch requires an array of objects in msg.params');
+                        }
+                        if (config.paramMap === 'snakeCase') {
+                            upsertData = upsertData.map(function(item) {
+                                return resultMapper.snakeize(item);
+                            });
+                        }
+                        if (!upsertData[0] || typeof upsertData[0] !== 'object' || Array.isArray(upsertData[0])) {
+                            throw new Error('upsertBatch requires an array of objects');
+                        }
+                        var upsertColumns = Object.keys(upsertData[0]).map(sanitizeIdentifier);
+                        var upsertValueClauses = [];
+                        var upsertFlatValues = [];
+                        upsertData.forEach(function(row) {
+                            var placeholders = upsertColumns.map(function() { return '?'; });
+                            upsertValueClauses.push('(' + placeholders.join(', ') + ')');
+                            upsertColumns.forEach(function(col) {
+                                var val = row[col];
+                                if (val === undefined || val !== val) { upsertFlatValues.push(null); }
+                                else if (val !== null && typeof val === 'object') { upsertFlatValues.push(JSON.stringify(val)); }
+                                else { upsertFlatValues.push(val); }
+                            });
+                        });
+                        var upsertUpdateClause = upsertColumns.map(function(col) {
+                            return col + ' = VALUES(' + col + ')';
+                        }).join(', ');
+                        sqlTemplate = 'INSERT INTO ' + tableName + ' (' + upsertColumns.join(', ') + ') VALUES ' + upsertValueClauses.join(', ') + ' ON DUPLICATE KEY UPDATE ' + upsertUpdateClause;
+                        params = upsertFlatValues;
+                        isQuery = false;
+                        break;
+
                     case 'deleteAndInsertBatch':
                         var batchData = msg.hasOwnProperty('params') ? msg.params : msg.payload;
                         if (!Array.isArray(batchData) || batchData.length === 0) {
@@ -399,8 +433,8 @@ module.exports = function(RED) {
 
                 // 解析并执行 SQL
                 var sql, values;
-                if (operation === 'insertBatch' || operation === 'deleteAndInsertBatch') {
-                    // insertBatch / deleteAndInsertBatch 已生成纯 ? 占位符 SQL，直接执行无需解析
+                if (operation === 'insertBatch' || operation === 'deleteAndInsertBatch' || operation === 'upsertBatch') {
+                    // insertBatch / deleteAndInsertBatch / upsertBatch 已生成纯 ? 占位符 SQL，直接执行无需解析
                     sql = sqlTemplate;
                     values = params;
                 } else {

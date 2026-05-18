@@ -1,6 +1,6 @@
 {
     "name": "tangbao-he-db-helper",
-    "version": "1.0.13",
+    "version": "1.0.14",
     "description": "MyBatis-style database helper for Node-RED with CRUD, SQL mapper, and multi-database support",
     "main": "db-config.js",
     "scripts": {
