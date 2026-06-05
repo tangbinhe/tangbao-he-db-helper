@@ -1,0 +1,61 @@
+[
+    {
+        "id": "example1",
+        "type": "inject",
+        "z": "flow1",
+        "name": "Test CRUD",
+        "props": [
+            {"p": "tableName", "v": "user", "vt": "str"},
+            {"p": "params", "v": "{\"status\":1}", "vt": "json"}
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 100,
+        "wires": [["crud1"]]
+    },
+    {
+        "id": "crud1",
+        "type": "tangbao-db-crud",
+        "z": "flow1",
+        "name": "",
+        "dbConfig": "db1",
+        "operation": "selectList",
+        "tableName": "",
+        "idColumn": "id",
+        "resultMap": "camelCase",
+        "x": 350,
+        "y": 100,
+        "wires": [["debug1"]]
+    },
+    {
+        "id": "debug1",
+        "type": "debug",
+        "z": "flow1",
+        "name": "Result",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 550,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "db1",
+        "type": "tangbao-db-config",
+        "dbType": "mysql",
+        "host": "localhost",
+        "port": "3306",
+        "user": "root",
+        "password": "",
+        "database": "test"
+    }
+]

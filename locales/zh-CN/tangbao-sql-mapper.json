@@ -1,0 +1,8 @@
+{
+    "tangbao-sql-mapper": {
+        "label": {
+            "name": "名称",
+            "sqlTemplate": "SQL 模板"
+        }
+    }
+}

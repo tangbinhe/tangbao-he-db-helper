@@ -1,0 +1,8 @@
+{
+    "tangbao-db-execute": {
+        "label": {
+            "dbConfig": "数据库配置",
+            "sql": "SQL"
+        }
+    }
+}

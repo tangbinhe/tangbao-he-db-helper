@@ -1,0 +1,56 @@
+<script type="text/javascript">
+    RED.nodes.registerType('tangbao-db-execute', {
+        category: 'database',
+        color: '#C0DEED',
+        defaults: {
+            name: { value: '' },
+            dbConfig: { value: '', type: 'tangbao-db-config', required: true },
+            mapper: { value: '', type: 'tangbao-sql-mapper', required: false },
+            sql: { value: '', required: false }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'logo.png',
+        label: function() {
+            return this.name || 'db execute';
+        },
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="tangbao-db-execute">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-dbConfig"><i class="fa fa-database"></i> 数据库配置</label>
+        <input type="text" id="node-input-dbConfig">
+    </div>
+    <div class="form-row">
+        <label for="node-input-mapper"><i class="fa fa-file-code-o"></i> SQL Mapper</label>
+        <input type="text" id="node-input-mapper">
+    </div>
+    <div class="form-row">
+        <label for="node-input-sql" style="vertical-align: top;"><i class="fa fa-code"></i> SQL</label>
+        <textarea id="node-input-sql" rows="6" style="width: 70%;" placeholder="UPDATE user SET name = #{name} WHERE id = #{id}"></textarea>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="tangbao-db-execute">
+    <p>执行 INSERT/UPDATE/DELETE 等写操作。支持 SQL 模板、参数绑定，以及动态传入 SQL。</p>
+    <h3>输入</h3>
+    <dl class="message-properties">
+        <dt>msg.sql <span class="property-type">string</span></dt>
+        <dd>动态传入 SQL 语句（优先级高于节点配置）。支持多语句（用分号分隔）。</dd>
+        <dt>msg.params <span class="property-type">object</span></dt>
+        <dd>SQL 模板参数，如 <code>#{name}</code> 会自动替换为对应值。</dd>
+        <dt>msg.payload <span class="property-type">object</span></dt>
+        <dd>当 <code>msg.params</code> 不存在时，自动回退到 <code>msg.payload</code> 作为参数。</dd>
+    </dl>
+    <h3>示例</h3>
+    <pre>msg.sql = "UPDATE user SET name = #{name} WHERE id = #{id}";
+msg.params = { id: 1, name: "Alice" };</pre>
+</script>

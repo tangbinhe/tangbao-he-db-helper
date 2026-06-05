@@ -1,0 +1,52 @@
+<script type="text/javascript">
+    RED.nodes.registerType('tangbao-sql-mapper', {
+        category: 'config',
+        defaults: {
+            name: { value: '' },
+            sqlTemplate: { value: '' }
+        },
+        label: function() {
+            return this.name || 'tangbao-sql-mapper';
+        },
+        oneditprepare: function() {
+            this.editor = RED.editor.createEditor({
+                id: 'node-config-input-sqlTemplate',
+                mode: 'ace/mode/sql',
+                value: this.sqlTemplate
+            });
+        },
+        oneditsave: function() {
+            this.sqlTemplate = this.editor.getValue();
+            this.editor.destroy();
+            delete this.editor;
+        },
+        oneditcancel: function() {
+            this.editor.destroy();
+            delete this.editor;
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="tangbao-sql-mapper">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-config-input-name">
+    </div>
+    <div class="form-row">
+        <label><i class="fa fa-file-code-o"></i> SQL Template</label>
+    </div>
+    <div class="form-row node-text-editor-row">
+        <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-config-input-sqlTemplate"></div>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="tangbao-sql-mapper">
+    <p>预定义 SQL 模板，支持动态参数。</p>
+    <h3>语法</h3>
+    <ul>
+        <li><code>#{param}</code> - 参数占位符</li>
+        <li><code>${param}</code> - 直接替换</li>
+        <li><code>&lt;if test="..."&gt;</code> - 条件</li>
+        <li><code>&lt;foreach&gt;</code> - 循环</li>
+    </ul>
+</script>

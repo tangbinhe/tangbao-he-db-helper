@@ -1,0 +1,57 @@
+[
+    {
+        "id": "query_inject1",
+        "type": "inject",
+        "z": "flow_query",
+        "name": "Test Query",
+        "props": [
+            {"p": "params", "v": "{\"status\":1}", "vt": "json"}
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 100,
+        "wires": [["query1"]]
+    },
+    {
+        "id": "query1",
+        "type": "tangbao-db-query",
+        "z": "flow_query",
+        "name": "",
+        "dbConfig": "db_query1",
+        "sql": "SELECT * FROM user WHERE status = #{status} ORDER BY id DESC",
+        "x": 350,
+        "y": 100,
+        "wires": [["debug_query1"]]
+    },
+    {
+        "id": "debug_query1",
+        "type": "debug",
+        "z": "flow_query",
+        "name": "Result",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 550,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "db_query1",
+        "type": "tangbao-db-config",
+        "dbType": "mysql",
+        "host": "localhost",
+        "port": "3306",
+        "user": "root",
+        "password": "",
+        "database": "test"
+    }
+]

@@ -1,0 +1,99 @@
+<script type="text/javascript">
+    RED.nodes.registerType('tangbao-db-config', {
+        category: 'config',
+        defaults: {
+            name: { value: '' },
+            driver: { value: 'mysql', required: true },
+            host: { value: 'localhost', required: false },
+            port: { value: '3306', required: false },
+            database: { value: '', required: true },
+            charset: { value: 'UTF8_GENERAL_CI', required: false },
+            timezone: { value: 'local', required: false },
+            connectionLimit: { value: 50, required: false, validate: RED.validators.number() }
+        },
+        credentials: {
+            user: { type: 'text' },
+            password: { type: 'password' }
+        },
+        label: function() {
+            if (this.name) return this.name;
+            if (this.driver === 'sqlite') return 'SQLite: ' + this.database;
+            return this.host + ':' + this.port + '/' + this.database;
+        },
+        oneditprepare: function() {
+            var node = this;
+            var driverSelect = $('#node-config-input-driver');
+            function updateFields() {
+                var driver = driverSelect.val();
+                if (driver === 'sqlite') {
+                    $('.mysql-only').hide();
+                    $('.sqlite-only').show();
+                    $('#node-config-input-database').attr('placeholder', '/path/to/database.db');
+                } else {
+                    $('.mysql-only').show();
+                    $('.sqlite-only').hide();
+                    $('#node-config-input-database').attr('placeholder', 'mydb');
+                }
+            }
+            driverSelect.on('change', updateFields);
+            updateFields();
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="tangbao-db-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-config-input-name">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-driver"><i class="fa fa-database"></i> 驱动类型</label>
+        <select id="node-config-input-driver" style="width: 70%;">
+            <option value="mysql">MySQL</option>
+            <option value="sqlite">SQLite</option>
+        </select>
+    </div>
+    <div class="form-row mysql-only">
+        <label for="node-config-input-host"><i class="fa fa-server"></i> 主机</label>
+        <input type="text" id="node-config-input-host" placeholder="localhost">
+    </div>
+    <div class="form-row mysql-only">
+        <label for="node-config-input-port"><i class="fa fa-plug"></i> 端口</label>
+        <input type="text" id="node-config-input-port" placeholder="3306">
+    </div>
+    <div class="form-row mysql-only">
+        <label for="node-config-input-user"><i class="fa fa-user"></i> 用户名</label>
+        <input type="text" id="node-config-input-user">
+    </div>
+    <div class="form-row mysql-only">
+        <label for="node-config-input-password"><i class="fa fa-key"></i> 密码</label>
+        <input type="password" id="node-config-input-password">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-database">
+            <span class="mysql-only"><i class="fa fa-database"></i> 数据库</span>
+            <span class="sqlite-only" style="display:none;"><i class="fa fa-file"></i> 数据库文件路径</span>
+        </label>
+        <input type="text" id="node-config-input-database" placeholder="mydb">
+    </div>
+    <div class="form-row mysql-only">
+        <label for="node-config-input-charset"><i class="fa fa-language"></i> 字符集</label>
+        <input type="text" id="node-config-input-charset" placeholder="UTF8_GENERAL_CI">
+    </div>
+    <div class="form-row mysql-only">
+        <label for="node-config-input-timezone"><i class="fa fa-clock-o"></i> 时区</label>
+        <input type="text" id="node-config-input-timezone" placeholder="local">
+    </div>
+    <div class="form-row mysql-only">
+        <label for="node-config-input-connectionLimit"><i class="fa fa-cogs"></i> 连接池限制</label>
+        <input type="number" id="node-config-input-connectionLimit" placeholder="50">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="tangbao-db-config">
+    <p>数据库连接配置节点，支持 MySQL 和 SQLite。</p>
+    <p>MySQL 使用连接池管理连接，支持自动重连和健康检查。</p>
+    <p>SQLite 使用本地文件数据库，无需网络连接。</p>
+    <p><b>连接池限制</b>（MySQL）：默认 50，可根据并发需求调整。</p>
+    <p><b>数据库文件路径</b>（SQLite）：填写 .db 文件的绝对或相对路径，如 <code>/data/mydb.db</code> 或 <code>mydb.db</code>。</p>
+</script>
