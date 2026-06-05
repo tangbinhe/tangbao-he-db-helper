@@ -1,0 +1,52 @@
+{
+    "name": "tangbao-he-db-helper",
+    "version": "1.0.25",
+    "description": "MyBatis-style database helper for Node-RED with CRUD, SQL mapper, and multi-database support",
+    "main": "db-config.js",
+    "scripts": {
+        "test": "mocha test/**/*_spec.js"
+    },
+    "keywords": [
+        "node-red",
+        "database",
+        "mybatis",
+        "sql",
+        "crud",
+        "mysql",
+        "postgresql",
+        "sqlite"
+    ],
+    "author": {
+        "name": "tangbao-he",
+        "email": "tbhwangyi@gmail.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tangbinhe/tangbao-he-db-helper.git"
+    },
+    "bugs": {
+        "url": "https://github.com/tangbinhe/tangbao-he-db-helper/issues"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": ">=18.0"
+    },
+    "node-red": {
+        "version": ">=4.0.0",
+        "nodes": {
+            "tangbao-db-config": "db-config.js",
+            "tangbao-sql-mapper": "sql-mapper.js",
+            "tangbao-db-query": "db-query.js",
+            "tangbao-db-execute": "db-execute.js",
+            "tangbao-db-crud": "db-crud.js"
+        }
+    },
+    "dependencies": {
+        "mysql2": "^3.16.0",
+        "better-sqlite3": "^12.0.0"
+    },
+    "devDependencies": {
+        "mocha": "^10.2.0",
+        "should": "^13.2.3"
+    }
+}
