@@ -1,6 +1,6 @@
 {
     "name": "tangbao-he-db-helper",
-    "version": "1.0.26",
+    "version": "1.0.27",
     "description": "MyBatis-style database helper for Node-RED with CRUD, SQL mapper, and multi-database support",
     "main": "db-config.js",
     "scripts": {
@@ -42,7 +42,9 @@
         }
     },
     "dependencies": {
-        "mysql2": "^3.16.0",
+        "mysql2": "^3.16.0"
+    },
+    "optionalDependencies": {
         "better-sqlite3": "^11.10.0"
     },
     "devDependencies": {
