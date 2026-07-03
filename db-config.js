@@ -5,9 +5,20 @@ module.exports = function(RED) {
     try { mysql = require('mysql2/promise'); } catch(e) {
         throw new Error('mysql2 is required but not installed. Please run: npm install mysql2');
     }
-    var sqlite3;
-    try { sqlite3 = require('better-sqlite3'); } catch(e) {
-        // optional, will error at runtime if sqlite driver is selected but not installed
+    // SQLite 驱动：优先使用 better-sqlite3，不可用时降级到 Node 内置的 node:sqlite
+    var sqlite3 = null;       // 数据库构造器
+    var sqliteMode = null;    // 'better-sqlite3' | 'node:sqlite' | null
+    try {
+        sqlite3 = require('better-sqlite3');
+        sqliteMode = 'better-sqlite3';
+    } catch(e) {
+        try {
+            var nodeSqlite = require('node:sqlite');
+            sqlite3 = nodeSqlite.DatabaseSync;
+            sqliteMode = 'node:sqlite';
+        } catch(e2) {
+            // 两个都没有，运行时选择 SQLite 会报错
+        }
     }
 
     /**
@@ -305,7 +316,7 @@ module.exports = function(RED) {
         var self = this;
         if (self.connected) return Promise.resolve();
         if (!sqlite3) {
-            throw new Error('better-sqlite3 is not installed. Please run: npm install better-sqlite3');
+            throw new Error('No SQLite driver available. Please install better-sqlite3 (npm install better-sqlite3) or use Node.js v22.5+ which has built-in node:sqlite module.');
         }
         try {
             self.db = new sqlite3(self.database);
@@ -324,7 +335,7 @@ module.exports = function(RED) {
                 throw new Error('SQLite database is not available');
             }
             var stmt = this.db.prepare(sql);
-            var rows = stmt.all(params || []);
+            var rows = stmt.all(...(params || []));
             return rows || [];
         } catch (err) {
             this.node.error('SQLite query failed: ' + err.message);
@@ -358,7 +369,7 @@ module.exports = function(RED) {
                     this.db.exec(stmtSql);
                 } else {
                     var stmt = this.db.prepare(stmtSql);
-                    var info = stmt.run(stmtParams);
+                    var info = stmt.run(...stmtParams);
                     totalAffected += info.changes || 0;
                     if (info.lastInsertRowid != null) {
                         lastInsertId = info.lastInsertRowid;
@@ -393,7 +404,7 @@ module.exports = function(RED) {
                 var conn = {
                     execute: function(sql, params) {
                         var stmt = self.db.prepare(sql);
-                        var info = stmt.run(params || []);
+                        var info = stmt.run(...(params || []));
                         return Promise.resolve([{ affectedRows: info.changes || 0, insertId: info.lastInsertRowid }]);
                     }
                 };
