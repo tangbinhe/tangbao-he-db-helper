@@ -5,20 +5,13 @@ module.exports = function(RED) {
     try { mysql = require('mysql2/promise'); } catch(e) {
         throw new Error('mysql2 is required but not installed. Please run: npm install mysql2');
     }
-    // SQLite 驱动：优先使用 better-sqlite3，不可用时降级到 Node 内置的 node:sqlite
-    var sqlite3 = null;       // 数据库构造器
-    var sqliteMode = null;    // 'better-sqlite3' | 'node:sqlite' | null
+    // SQLite 驱动：使用 Node.js 内置的 node:sqlite 模块（Node v22.5+ 自带，无需安装任何依赖）
+    var sqlite3 = null;
     try {
-        sqlite3 = require('better-sqlite3');
-        sqliteMode = 'better-sqlite3';
+        var nodeSqlite = require('node:sqlite');
+        sqlite3 = nodeSqlite.DatabaseSync;
     } catch(e) {
-        try {
-            var nodeSqlite = require('node:sqlite');
-            sqlite3 = nodeSqlite.DatabaseSync;
-            sqliteMode = 'node:sqlite';
-        } catch(e2) {
-            // 两个都没有，运行时选择 SQLite 会报错
-        }
+        // Node 版本低于 22.5，运行时选择 SQLite 会报错
     }
 
     /**
@@ -316,7 +309,7 @@ module.exports = function(RED) {
         var self = this;
         if (self.connected) return Promise.resolve();
         if (!sqlite3) {
-            throw new Error('No SQLite driver available. Please install better-sqlite3 (npm install better-sqlite3) or use Node.js v22.5+ which has built-in node:sqlite module.');
+            throw new Error('SQLite driver not available. node:sqlite module requires Node.js v22.5 or later. Please upgrade your Node.js version to use SQLite.');
         }
         try {
             self.db = new sqlite3(self.database);
